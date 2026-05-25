@@ -9,29 +9,33 @@ import { getCameraOverride, SCENE_TARGETS } from '@/lib/cameraOverride';
 
 /**
  * Camera rig — drives the camera position + look-target as a function
- * of global scroll progress, using DOM-measured keyframes.
+ * of global scroll progress, using DOM-measured keyframes with a
+ * hold-then-transition pattern.
  *
- * The earlier static-keyframe-table approach was fragile: every change
- * to a section's height (adding the Primitive Camp card, swapping a
- * 140vh scene for a 180vh one) shifted every downstream section's
- * actual scroll position vs. its hard-coded `t` value. Symptoms ranged
- * from "camera arrives at Homestead while you're still on Driftwood"
- * to "Primitive Camp shows Serene Seven view because the keyframe is
- * one card too early."
+ * The earlier static-keyframe-table approach was fragile (every
+ * section-height change shifted every downstream keyframe's actual
+ * scroll position). The first dynamic-keyframe pass measured DOM but
+ * placed only ONE keyframe per section, which meant the camera was
+ * always in transit between adjacent keyframes — when the visitor was
+ * on the Primitive Camp card, the camera was already lerping toward
+ * the Shower position and showed empty back-corner.
  *
- * The new approach measures each section's actual top in the document
- * on mount + resize, converts to progress (`top / maxScroll`), and
- * builds the keyframe array from those measurements + the camera
- * positions in `SCENE_TARGETS`. Linear interpolation between adjacent
- * keyframes gives the continuous cinematic-scrub motion that the
- * progress-based system originally provided — but the timing is now
- * DOM-anchored, not progress-window-guessed.
+ * This pass emits TWO keyframes per section (start + end), both at
+ * the same pos/target. The camera HOLDS at the section's position
+ * through most of the section's scroll window, then TRANSITIONS in
+ * the last 20-30vh to the next section's start keyframe. Result: the
+ * camera composes on each scene's subject AND holds while the visitor
+ * reads, then glides cinematically into the next.
  *
- * Two anticipation offsets are applied: full sections subtract 40% of
- * viewport height so the camera arrives roughly when the section
- * crosses 60% from the top; Stay's sticky-pinned articles subtract
- * 30% (they have less scroll runway each, so a smaller lead works
- * better).
+ * Transition window per kind:
+ *   - article (Stay sticky cards, ~100vh): last 20vh transitions
+ *   - section (full scenes, 140-180vh):    last 30vh transitions
+ *
+ * Lead per kind:
+ *   - article: 0vh (camera arrives as the sticky activates)
+ *   - section: 25vh (camera arrives slightly before the section's
+ *               top reaches viewport top, so it's already composed
+ *               when the section's copy becomes visible)
  */
 
 type CameraKeyframe = {
@@ -88,20 +92,42 @@ function buildKeyframes(): CameraKeyframe[] {
     const targetCfg = SCENE_TARGETS[id];
     if (!targetCfg) continue;
 
-    const top = el.getBoundingClientRect().top + window.scrollY;
-    // Anticipation: fire the keyframe slightly before the section is
-    // fully in view so the camera composes ON the subject as the copy
-    // becomes visible, not after.
-    const lead = kind === 'section' ? vh * 0.4 : vh * 0.3;
-    const t = clamp((top - lead) / maxScroll, 0.001, 0.999);
-    frames.push({ t, ...targetCfg });
+    const rect = el.getBoundingClientRect();
+    const top = rect.top + window.scrollY;
+    const height = rect.height;
+
+    // Lead: how much earlier (in scroll-vh) the camera should arrive
+    // at this section's position. Sticky articles get 0vh because
+    // they only become the active sticky AT scroll = top. Non-sticky
+    // sections get 25vh so the camera is composed before the section's
+    // content is fully visible.
+    const leadVh = kind === 'article' ? 0 : 25;
+    // Transition window: how much of the section's TAIL is used to
+    // lerp toward the next section's keyframe. Smaller for articles
+    // (they have less scroll runway each) so they hold longer.
+    const transitionVh = kind === 'article' ? 20 : 30;
+
+    const leadPx = (leadVh / 100) * vh;
+    const transitionPx = (transitionVh / 100) * vh;
+
+    // Start keyframe — camera arrives at this section's position.
+    const startT = clamp((top - leadPx) / maxScroll, 0.001, 0.999);
+    // End keyframe — camera is STILL at this section's position
+    // (same pos/target). Transition to the next section happens
+    // between this keyframe and the next section's start keyframe.
+    const endT = clamp((top + height - transitionPx) / maxScroll, 0.001, 0.999);
+
+    frames.push({ t: startT, ...targetCfg });
+    if (endT > startT + 0.001) {
+      frames.push({ t: endT, ...targetCfg });
+    }
   }
 
   // Footer hold — same as Book so the camera doesn't drift after the
   // visitor reaches the bottom.
   frames.push({ t: 1, ...SCENE_TARGETS.book });
 
-  // Sort by t in case any anticipated keyframe ended up out of order.
+  // Sort by t in case adjacent measurements produced out-of-order ts.
   frames.sort((a, b) => a.t - b.t);
   return frames;
 }
