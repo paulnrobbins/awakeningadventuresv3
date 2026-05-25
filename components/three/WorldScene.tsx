@@ -54,9 +54,10 @@ export function WorldScene() {
   useEffect(() => subscribeLakeActive(setLakeActive), []);
 
   const starCount = tier === 'high' ? 6000 : tier === 'mid' ? 2500 : 800;
-  // Handheld shake peaks in the welcome scene's range
+  // Handheld shake peaks in the welcome scene's range — shifted for
+  // the 5-card Stay (welcome now starts at progress 0.719, not 0.701)
   const cameraShake =
-    progress > 0.66 && progress < 0.80
+    progress > 0.71 && progress < 0.81
       ? 0.36
       : reduced
       ? 0
@@ -70,15 +71,18 @@ export function WorldScene() {
   // instant the lake DOM section enters — otherwise dark trunks
   // briefly composite over the water during the trails → lake camera
   // transition.
-  const inForest = progress > 0.44 && progress < 0.56 && !lakeActive;
+  // Mount windows shifted for the 5-card Stay layout (was 4-card).
+  // Total page grew from ~1570vh to ~1670vh, so every section past
+  // Stay sits ~0.06 progress later than the old windows assumed.
+  const inForest = progress > 0.49 && progress < 0.62 && !lakeActive;
   const inLakeRange = lakeActive;
-  const inWelcomeRange = progress > 0.64 && progress < 0.90 && !lakeActive;
-  const inBookRange = progress > 0.84;
+  const inWelcomeRange = progress > 0.68 && progress < 0.92 && !lakeActive;
+  const inBookRange = progress > 0.86;
   // Primitive Camp scene — back-corner clearing, mounted only while the
   // 5th Stay card (Primitive Camp) is in view. Range covers the
   // Serene-Seven → Primitive transition through the end of the Stay
   // section so the camp is on-screen as the camera arrives.
-  const inPrimitiveRange = progress > 0.32 && progress < 0.44;
+  const inPrimitiveRange = progress > 0.36 && progress < 0.46;
 
   return (
     <>

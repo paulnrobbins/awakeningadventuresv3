@@ -34,22 +34,26 @@ type CameraKeyframe = {
 // adjacent keyframes makes the camera sweep continuously from one
 // focal point to the next as the visitor scrolls.
 //
-// Scroll-progress boundaries derived from rendered scene heights:
+// Scroll-progress boundaries derived from rendered scene heights —
+// REVISED for the 5-card Stay (Primitive Camp added). Total page is
+// now 1670vh (was 1570vh), so every section past Stay shifts ~+0.06
+// progress later:
 //
-//   Hero       100vh   → progress 0.000 - 0.064
-//   Property   140vh   → progress 0.064 - 0.153
-//   Stay       400vh   → progress 0.153 - 0.408  (4 sticky cards)
-//     Stargazer    → starts 0.153
-//     Driftwood    → starts 0.217
-//     Homestead    → starts 0.281
-//     Serene Seven → starts 0.344
-//   Shower     140vh   → starts 0.408
-//   Trails     140vh   → starts 0.497
-//   Lake       180vh   → starts 0.586
-//   Welcome    140vh   → starts 0.701
-//   Groups     140vh   → starts 0.790
-//   Book       140vh   → starts 0.879
-//   Footer      50vh   → starts 0.968
+//   Hero       100vh   → progress 0.000 - 0.060
+//   Property   140vh   → progress 0.060 - 0.144
+//   Stay       500vh   → progress 0.144 - 0.443  (5 sticky cards)
+//     Stargazer    → starts 0.144
+//     Driftwood    → starts 0.204
+//     Homestead    → starts 0.263
+//     Serene Seven → starts 0.323
+//     Primitive    → starts 0.383
+//   Shower     140vh   → starts 0.443
+//   Trails     140vh   → starts 0.527
+//   Lake       180vh   → starts 0.611
+//   Welcome    140vh   → starts 0.719
+//   Groups     140vh   → starts 0.803
+//   Book       140vh   → starts 0.887
+//   Footer      50vh   → starts 0.970
 //
 // Result: as the visitor enters each section, the camera is already
 // composed on that section's subject. As they scroll through the
@@ -58,62 +62,58 @@ type CameraKeyframe = {
 const KEYFRAMES: CameraKeyframe[] = [
   // Opening aerial — held through the entire hero scene so the
   // visitor's first impression is the wide property.
-  { t: 0.00,  pos: [22,   22,   32], target: [0,   0,    -10] },
+  { t: 0.000, pos: [22,   22,   32], target: [0,   0,    -10] },
   // Property scene start — mid-descent. Camera is already moving
   // from aerial toward the cabins as the "Forty-two acres" copy reads.
   { t: 0.040, pos: [12,   14,   22], target: [0,   0.8,   -4] },
-  // Stargazer — keyframe pulled ~3% earlier than section start so
-  // the cabin is centered BEFORE the visitor finishes scrolling
-  // into the Stargazer card. Each subsequent keyframe shifts the
-  // same amount earlier so every subject leads its content.
-  { t: 0.125, pos: [-3.0, 1.8,   4.0], target: [0,   1.2,    0] },
-  // Driftwood
-  { t: 0.190, pos: [16,   4.0,  -6.0], target: [22,  4.0,  -16] },
-  // Homestead — Stay card #3, card on LEFT half of viewport. Camera
-  // east of the Homestead tent at [-22, 0, -6]. Look-target shifted
-  // ~1m east of the tent (not 4m — that pushed the tent to the extreme
-  // left edge / off-screen). Now the tent lands ~25% left of frame
-  // center, large and clearly visible behind the card.
-  { t: 0.255, pos: [-16,  2.0,   1.0], target: [-21, 1.0,   -6] },
-  // Serene Seven — Stay card #4, card on RIGHT. Pulled DOWN from the
-  // old high-y=6.5 vantage (tent was rendering as a distant triangle)
-  // to eye-level, and rotated so target sits west of the tent. Tent at
-  // [-26, 0, -24] then renders on the RIGHT of the frame, behind the
-  // card.
-  { t: 0.320, pos: [-22,  2.4, -16],   target: [-30, 1.5,  -25] },
-  // Primitive Camp — Stay card #5, card on LEFT. PrimitiveCamp scene
-  // lives at world [-12, 0, -32]. The previous keyframe looked at
-  // [-6, 1, -32] which put the camp 50%+ off the left edge of frame
-  // (Serene Seven's lingering silhouette read as "the" tent). Now the
-  // camera sits just east-and-in-front-of the camp at [-9, 1.6, -25],
-  // look-target only 1m east of the camp's X — camp renders ~36% left
-  // of frame center: comfortably behind the card and clearly the focal
-  // subject of the scene.
-  { t: 0.355, pos: [-9,   1.6, -25],   target: [-11, 0.6,  -32] },
-  // Shower scene — text card on LEFT says "Shower in the trees", so
-  // the Driftwood treehouse at [22, 0, -16] needs to render LEFT of
-  // frame, behind the card (the previous keyframe pushed the treehouse
-  // far right of viewport). Camera pulled WEST + closer; look-target
-  // shifted ~4m EAST of the treehouse so the treehouse appears left of
-  // frame center.
-  { t: 0.385, pos: [10,   4.5,  -2.0], target: [26,  3.5,  -14] },
-  // Trails — wide eye-level view down the central trail corridor.
-  { t: 0.475, pos: [0,    2.0,  -3],   target: [0,   1.8,  -18] },
-  // Lake — shoreside view with the dock and moored pontoon.
-  { t: 0.560, pos: [-7,   3.2, -22],   target: [2,   0.4,  -40] },
-  // Welcome — sitting at the fire pit (the pit is at [-2, 0, -8]).
-  // Camera centered on the pit's X and lowered to seated-at-the-fire
-  // height; look-target dropped to flame-base so the embers + flame
-  // anchor the lower half of the frame, behind the centered "Hosted
-  // by us, Anthony and Barb" card overlay.
-  { t: 0.675, pos: [-2.6, 1.0,  -5.6], target: [-2,  0.35,  -7.8] },
-  // Groups — full pull-back to see the entire property at late
-  // afternoon.
-  { t: 0.765, pos: [14,   16,   20],   target: [-2,  0.5,   -6] },
-  // Book — return to a composition close to the original hero so
-  // the visitor reads the final "Come and see" against the same
-  // anchor they entered with.
-  { t: 0.855, pos: [0,    1.4,   6.0], target: [0,   1.0,    0] },
+  // Stargazer — keyframe pulled ~2% earlier than card start (0.144)
+  // so the cabin is centered BEFORE the visitor finishes scrolling
+  // into the Stargazer card. Each subsequent Stay keyframe shifts
+  // the same anticipation amount earlier so every subject leads its
+  // content.
+  { t: 0.124, pos: [-3.0, 1.8,   4.0], target: [0,   1.2,    0] },
+  // Driftwood — card starts 0.204
+  { t: 0.184, pos: [16,   4.0,  -6.0], target: [22,  4.0,  -16] },
+  // Homestead — card starts 0.263, card on LEFT half of viewport.
+  // Camera east of the Homestead tent at [-22, 0, -6]; look-target
+  // ~1m east of the tent. Tent lands ~25% left of frame center,
+  // large and clearly visible behind the card.
+  { t: 0.244, pos: [-16,  2.0,   1.0], target: [-21, 1.0,   -6] },
+  // Serene Seven — card starts 0.323, card on RIGHT. Eye-level
+  // vantage from east-of-tent; target shifted west of the tent so
+  // the tent renders on the RIGHT of the frame, behind the card.
+  { t: 0.304, pos: [-22,  2.4, -16],   target: [-30, 1.5,  -25] },
+  // Primitive Camp — card starts 0.383, card on LEFT. PrimitiveCamp
+  // scene lives at world [-12, 0, -32]. Camera just east-and-in-
+  // front-of the camp; look-target 1m east of the camp's X — camp
+  // renders ~36% left of frame, behind the card, fire ring as focal
+  // subject.
+  { t: 0.363, pos: [-9,   1.6, -25],   target: [-11, 0.6,  -32] },
+  // Shower scene — card starts 0.443. Text card on LEFT says
+  // "Shower in the trees", Driftwood treehouse at [22, 0, -16] needs
+  // to render LEFT of frame. Camera pulled WEST + closer; look-
+  // target shifted ~4m EAST of the treehouse so the treehouse
+  // appears left of frame center.
+  { t: 0.423, pos: [10,   4.5,  -2.0], target: [26,  3.5,  -14] },
+  // Trails — section starts 0.527. Wide eye-level view down the
+  // central trail corridor.
+  { t: 0.507, pos: [0,    2.0,  -3],   target: [0,   1.8,  -18] },
+  // Lake — section starts 0.611. Shoreside view with the dock and
+  // moored pontoon.
+  { t: 0.591, pos: [-7,   3.2, -22],   target: [2,   0.4,  -40] },
+  // Welcome — section starts 0.719. Sitting at the fire pit (the
+  // pit is at [-2, 0, -8]). Camera centered on the pit's X, lowered
+  // to seated-at-the-fire height; look-target dropped to flame-base
+  // so embers + flame anchor the lower half of the frame behind the
+  // centered "Hosted by us, Anthony and Barb" card.
+  { t: 0.699, pos: [-2.6, 1.0,  -5.6], target: [-2,  0.35,  -7.8] },
+  // Groups — section starts 0.803. Full pull-back to see the entire
+  // property at late afternoon.
+  { t: 0.783, pos: [14,   16,   20],   target: [-2,  0.5,   -6] },
+  // Book — section starts 0.887. Return to a composition close to
+  // the original hero so the visitor reads the final "Come and see"
+  // against the same anchor they entered with.
+  { t: 0.867, pos: [0,    1.4,   6.0], target: [0,   1.0,    0] },
   // Footer hold — same position so the camera doesn't drift past
   // the booking moment while the visitor scrolls through the footer.
   { t: 1.000, pos: [0,    1.4,   6.0], target: [0,   1.0,    0] },
@@ -175,8 +175,13 @@ export function CameraRig({ shake = 0 }: CameraRigProps) {
         tmpPos.current.y += Math.cos(t2 * 1.3) * 0.03 * shake;
       }
 
-      camera.position.lerp(tmpPos.current, 1 - Math.pow(0.06, delta));
-      currentTarget.current.lerp(tmpTarget.current, 1 - Math.pow(0.06, delta));
+      // Lerp tightened from 0.06 → 0.0001. The previous value gave a
+      // ~0.5s catch-up which was fine for 4-card Stay but became
+      // visible lag in the 5-card layout where each card has ~60vh
+      // of scroll. 0.0001 gives ~0.2s — still smooths jitter from
+      // Lenis, no longer reads as "camera is behind the scroll."
+      camera.position.lerp(tmpPos.current, 1 - Math.pow(0.0001, delta));
+      currentTarget.current.lerp(tmpTarget.current, 1 - Math.pow(0.0001, delta));
       camera.lookAt(currentTarget.current);
       return;
     }
@@ -214,13 +219,16 @@ export function CameraRig({ shake = 0 }: CameraRigProps) {
       tmpPos.current.y += Math.cos(t2 * 1.3) * 0.03 * shake;
     }
 
-    // Camera-position lerp slowed from 0.10 → 0.06 so the camera
-    // glides toward the scroll-derived target rather than snapping
-    // into place. Combined with the linear progress curve above,
-    // this is what produces "cinematic camera moving with you" as
-    // opposed to "camera teleports to next keyframe."
-    camera.position.lerp(tmpPos.current, 1 - Math.pow(0.06, delta));
-    currentTarget.current.lerp(tmpTarget.current, 1 - Math.pow(0.06, delta));
+    // Camera-position lerp: was 0.06 for cinematic-glide, now 0.0001
+    // for scroll-tight tracking. The 0.06 value worked when each
+    // Stay card had ~0.06 progress of scroll runway; adding the
+    // Primitive Camp shrank per-card scroll to ~0.06 / 1.25 and
+    // the old smoothing meant the camera arrived ~0.5s after the
+    // user landed on a card. 0.0001 brings catch-up to ~0.2s
+    // while still damping Lenis-frame jitter. The shake math
+    // above still produces handheld micro-motion on top.
+    camera.position.lerp(tmpPos.current, 1 - Math.pow(0.0001, delta));
+    currentTarget.current.lerp(tmpTarget.current, 1 - Math.pow(0.0001, delta));
     camera.lookAt(currentTarget.current);
   });
 
