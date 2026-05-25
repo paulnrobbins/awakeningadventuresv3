@@ -6,6 +6,11 @@ import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { sound } from '@/lib/sound';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LoopingVideo } from '@/components/ui/LoopingVideo';
+import {
+  setCameraOverride,
+  setForestActive,
+  SCENE_TARGETS,
+} from '@/lib/cameraOverride';
 
 /**
  * Scene 4 — The Trails. The rock bridge moment, told through
@@ -59,7 +64,38 @@ export function SceneTrails() {
 
     gsap.set(items, { opacity: 0, y: 32 });
 
-    return () => { trig.kill(); };
+    // Mount trigger — wider bounds (top bottom → bottom top) so the
+    // ForestScene 3D content mounts well before the visitor reaches
+    // it and stays mounted until they're fully past. Eliminates the
+    // "rock bridge / platform appears for a second then disappears"
+    // flicker from the old progress-window mount.
+    const mountTrig = ScrollTrigger.create({
+      trigger: ref.current,
+      start: 'top bottom',
+      end: 'bottom top',
+      onEnter: () => setForestActive(true),
+      onEnterBack: () => setForestActive(true),
+      onLeave: () => setForestActive(false),
+      onLeaveBack: () => setForestActive(false),
+    });
+
+    // Camera trigger — narrower, tied to the centered-in-viewport
+    // window so the camera lands on the trail corridor at the same
+    // moment the editorial copy fades in.
+    const cameraTrig = ScrollTrigger.create({
+      trigger: ref.current,
+      start: 'top center',
+      end: 'bottom center',
+      onEnter: () => setCameraOverride(SCENE_TARGETS.trails),
+      onEnterBack: () => setCameraOverride(SCENE_TARGETS.trails),
+    });
+
+    return () => {
+      trig.kill();
+      mountTrig.kill();
+      cameraTrig.kill();
+      setForestActive(false);
+    };
   }, [reduced]);
 
   return (

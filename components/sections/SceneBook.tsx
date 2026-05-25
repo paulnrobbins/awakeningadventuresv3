@@ -6,6 +6,11 @@ import { sound } from '@/lib/sound';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ACCOMMODATIONS, FULL_PROPERTY_BOOKING_URL } from '@/content/accommodations';
 import { LoopingVideo } from '@/components/ui/LoopingVideo';
+import {
+  setCameraOverride,
+  setBookActive,
+  SCENE_TARGETS,
+} from '@/lib/cameraOverride';
 
 /**
  * Scene 8 — Come and see.
@@ -60,7 +65,32 @@ export function SceneBook() {
 
     gsap.set(items, { opacity: 0, y: 24 });
 
-    return () => { trig.kill(); };
+    // Mount trigger — BookingStage mounts while the booking section is
+    // anywhere near viewport. Camera trigger lands the hero-like
+    // composition for the final card stack.
+    const mountTrig = ScrollTrigger.create({
+      trigger: ref.current,
+      start: 'top bottom',
+      end: 'bottom top',
+      onEnter: () => setBookActive(true),
+      onEnterBack: () => setBookActive(true),
+      onLeave: () => setBookActive(false),
+      onLeaveBack: () => setBookActive(false),
+    });
+    const cameraTrig = ScrollTrigger.create({
+      trigger: ref.current,
+      start: 'top center',
+      end: 'bottom center',
+      onEnter: () => setCameraOverride(SCENE_TARGETS.book),
+      onEnterBack: () => setCameraOverride(SCENE_TARGETS.book),
+    });
+
+    return () => {
+      trig.kill();
+      mountTrig.kill();
+      cameraTrig.kill();
+      setBookActive(false);
+    };
   }, [reduced]);
 
   return (

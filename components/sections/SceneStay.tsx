@@ -6,20 +6,29 @@ import { ACCOMMODATIONS } from '@/content/accommodations';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LoopingVideo } from '@/components/ui/LoopingVideo';
 import { cn } from '@/lib/utils';
+import {
+  setCameraOverride,
+  setPrimitiveCampActive,
+  SCENE_TARGETS,
+} from '@/lib/cameraOverride';
 
 /**
  * Scene 3 — Stay.
  *
- * Four accommodations stack vertically. Each one is sticky-pinned to
- * the viewport and fades in as the visitor scrolls. When an
- * accommodation has photos (e.g. Stargazer), an ImageCarousel renders
- * beside the text card. Otherwise the text card takes the full width.
+ * Five accommodations stack vertically. Each one is sticky-pinned to
+ * the viewport and fades in as the visitor scrolls. Each article also
+ * owns a SECOND ScrollTrigger that fires as the sticky pinning
+ * activates — `start: 'top top'` / `end: 'bottom top'` is the natural
+ * "this card is the active sticky" window. On enter, the matching
+ * camera override fires so the 3D world lands on this card's subject
+ * exactly when the user starts reading it. The 0.0001 camera lerp in
+ * CameraRig smooths the transition between adjacent overrides so the
+ * scrub still feels cinematic — no snap-lock.
  *
- * Camera motion is driven by CameraRig's progress-based keyframes
- * (one per accommodation). We DELIBERATELY no longer call
- * setCameraOverride from here — the override snap-locked the camera
- * per-card, breaking the cinematic scrub feel where the camera should
- * continuously walk between accommodations as the visitor scrolls.
+ * Primitive Camp's article also flips `primitiveCampActive` so
+ * WorldScene mounts the back-corner camp scene only when this card is
+ * in view — eliminates the flicker where the camp was appearing and
+ * disappearing during scroll based on a progress-window guess.
  */
 export function SceneStay() {
   const ref = useRef<HTMLDivElement>(null);
@@ -37,7 +46,12 @@ export function SceneStay() {
 
     const triggers: ScrollTrigger[] = [];
     items.forEach((item) => {
-      const st = ScrollTrigger.create({
+      const id = item.getAttribute('data-accom') ?? '';
+      const target = SCENE_TARGETS[id];
+      const isPrimitive = id === 'primitive-camp';
+
+      // Trigger 1 — text fade in/out tied to the article's visibility.
+      const fadeTrig = ScrollTrigger.create({
         trigger: item,
         start: 'top 70%',
         end: 'bottom 30%',
@@ -56,11 +70,42 @@ export function SceneStay() {
         },
       });
       gsap.set(item, { opacity: 0, y: 32 });
-      triggers.push(st);
+      triggers.push(fadeTrig);
+
+      // Trigger 2 — camera override + (for primitive) mount flag. Fires
+      // when the article becomes the active sticky card. The window
+      // 'top top' → 'bottom top' is exactly the 100vh during which
+      // this article is pinned and visible. setCameraOverride on
+      // enter + enter-back covers both scroll directions; the next
+      // article's onEnter replaces the override naturally on scroll-
+      // through.
+      if (target) {
+        const cameraTrig = ScrollTrigger.create({
+          trigger: item,
+          start: 'top top',
+          end: 'bottom top',
+          onEnter: () => {
+            setCameraOverride(target);
+            if (isPrimitive) setPrimitiveCampActive(true);
+          },
+          onEnterBack: () => {
+            setCameraOverride(target);
+            if (isPrimitive) setPrimitiveCampActive(true);
+          },
+          onLeave: () => {
+            if (isPrimitive) setPrimitiveCampActive(false);
+          },
+          onLeaveBack: () => {
+            if (isPrimitive) setPrimitiveCampActive(false);
+          },
+        });
+        triggers.push(cameraTrig);
+      }
     });
 
     return () => {
       triggers.forEach((t) => t.kill());
+      setPrimitiveCampActive(false);
     };
   }, [reduced]);
 

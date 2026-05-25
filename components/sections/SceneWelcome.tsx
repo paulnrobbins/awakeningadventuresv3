@@ -6,6 +6,11 @@ import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { sound } from '@/lib/sound';
 import { REVIEWS } from '@/content/reviews';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import {
+  setCameraOverride,
+  setWelcomeActive,
+  SCENE_TARGETS,
+} from '@/lib/cameraOverride';
 
 /**
  * Scene 6 — The Welcome.
@@ -66,7 +71,38 @@ export function SceneWelcome() {
 
     gsap.set(items, { opacity: 0, y: 28 });
 
-    return () => { trig.kill(); };
+    // Mount trigger — keeps WelcomeStage (fire pit + photo billboards)
+    // mounted while the section is anywhere near the viewport, so the
+    // 3D fire is already present as the camera moves in. Wider bounds
+    // than the camera trigger to prevent flicker.
+    const mountTrig = ScrollTrigger.create({
+      trigger: ref.current,
+      start: 'top bottom',
+      end: 'bottom top',
+      onEnter: () => setWelcomeActive(true),
+      onEnterBack: () => setWelcomeActive(true),
+      onLeave: () => setWelcomeActive(false),
+      onLeaveBack: () => setWelcomeActive(false),
+    });
+
+    // Camera trigger — fires when the centered "Hosted by us" card
+    // hits center of viewport, landing the camera at the fire pit so
+    // the embers/flame anchor the lower half of the frame behind the
+    // card.
+    const cameraTrig = ScrollTrigger.create({
+      trigger: ref.current,
+      start: 'top center',
+      end: 'bottom center',
+      onEnter: () => setCameraOverride(SCENE_TARGETS.welcome),
+      onEnterBack: () => setCameraOverride(SCENE_TARGETS.welcome),
+    });
+
+    return () => {
+      trig.kill();
+      mountTrig.kill();
+      cameraTrig.kill();
+      setWelcomeActive(false);
+    };
   }, [reduced]);
 
   // Use only the first sentence of Sabrina's testimonial — the rest can

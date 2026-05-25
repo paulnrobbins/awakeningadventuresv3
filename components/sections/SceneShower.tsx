@@ -4,17 +4,18 @@ import { useEffect, useRef } from 'react';
 import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LoopingVideo } from '@/components/ui/LoopingVideo';
+import { setCameraOverride, SCENE_TARGETS } from '@/lib/cameraOverride';
 
 /**
  * Shower in the Trees — bonus scene between Stay and Trails. The
  * treehouse shower is one of the property's signature features per
  * the live sanctuary page ("Best Treehouse Shower in Tennessee").
- * Sits in 3D world space alongside the property buildings; this DOM
- * overlay supplies the editorial caption + carousel.
  *
- * Camera motion handled by CameraRig's progress-based shower keyframe
- * (t=0.44). No setCameraOverride — that snap-locked the camera and
- * broke cinematic scrub between scenes.
+ * Camera: ScrollTrigger fires setCameraOverride(SCENE_TARGETS.shower)
+ * on enter so the Driftwood treehouse renders LEFT of frame behind
+ * the card the moment the section enters view. No more guessing where
+ * on the global-progress timeline this scene sits — the camera lands
+ * exactly when the DOM section becomes visible.
  */
 export function SceneShower() {
   const ref = useRef<HTMLDivElement>(null);
@@ -29,7 +30,8 @@ export function SceneShower() {
       return;
     }
 
-    const trig = ScrollTrigger.create({
+    // Text fade in/out
+    const fadeTrig = ScrollTrigger.create({
       trigger: ref.current,
       start: 'top 70%',
       end: 'bottom 30%',
@@ -43,8 +45,20 @@ export function SceneShower() {
     });
     gsap.set(items, { opacity: 0, y: 28 });
 
+    // Camera override — fires when section enters viewport. start at
+    // 'top center' so the override lands as the visitor scrolls the
+    // section's top into the middle of the viewport.
+    const cameraTrig = ScrollTrigger.create({
+      trigger: ref.current,
+      start: 'top center',
+      end: 'bottom center',
+      onEnter: () => setCameraOverride(SCENE_TARGETS.shower),
+      onEnterBack: () => setCameraOverride(SCENE_TARGETS.shower),
+    });
+
     return () => {
-      trig.kill();
+      fadeTrig.kill();
+      cameraTrig.kill();
     };
   }, [reduced]);
 

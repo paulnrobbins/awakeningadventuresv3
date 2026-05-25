@@ -4,7 +4,13 @@ import { useEffect, useState } from 'react';
 import { getLenis } from '@/lib/lenis';
 import { useDeviceTier } from '@/hooks/useDeviceTier';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { subscribeLakeActive } from '@/lib/cameraOverride';
+import {
+  subscribeLakeActive,
+  subscribeForestActive,
+  subscribeWelcomeActive,
+  subscribePrimitiveCampActive,
+  subscribeBookActive,
+} from '@/lib/cameraOverride';
 import { CameraRig } from './CameraRig';
 import { EnvironmentRig } from './EnvironmentRig';
 import { Firefly } from './Firefly';
@@ -35,7 +41,17 @@ export function WorldScene() {
   const tier = useDeviceTier();
   const reduced = useReducedMotion();
   const [progress, setProgress] = useState(0);
+
+  // All scene mount flags are now DOM-driven — each Scene component
+  // owns a ScrollTrigger that flips its flag when its <section> enters
+  // and leaves the viewport. This replaces the old guessed-from-
+  // progress windows that caused content to mount briefly then vanish
+  // when section heights changed.
   const [lakeActive, setLakeActive] = useState(false);
+  const [forestActive, setForestActive] = useState(false);
+  const [welcomeActive, setWelcomeActive] = useState(false);
+  const [primitiveActive, setPrimitiveActive] = useState(false);
+  const [bookActive, setBookActive] = useState(false);
 
   useEffect(() => {
     const lenis = getLenis();
@@ -47,42 +63,28 @@ export function WorldScene() {
     return () => lenis.off('scroll', handler);
   }, []);
 
-  // DOM-driven lake mount. SceneLake fires setLakeActive(true/false)
-  // based on its own ScrollTrigger range, so the 3D lake mounts when
-  // the DOM section enters and unmounts when it leaves — no progress
-  // math, no drift.
   useEffect(() => subscribeLakeActive(setLakeActive), []);
+  useEffect(() => subscribeForestActive(setForestActive), []);
+  useEffect(() => subscribeWelcomeActive(setWelcomeActive), []);
+  useEffect(() => subscribePrimitiveCampActive(setPrimitiveActive), []);
+  useEffect(() => subscribeBookActive(setBookActive), []);
 
   const starCount = tier === 'high' ? 6000 : tier === 'mid' ? 2500 : 800;
-  // Handheld shake peaks in the welcome scene's range — shifted for
-  // the 5-card Stay (welcome now starts at progress 0.719, not 0.701)
-  const cameraShake =
-    progress > 0.71 && progress < 0.81
-      ? 0.36
-      : reduced
-      ? 0
-      : 0.05;
+  // Handheld shake peaks while the Welcome stage is active.
+  const cameraShake = welcomeActive
+    ? 0.36
+    : reduced
+    ? 0
+    : 0.05;
 
-  // Forest / welcome / book still progress-driven (they're stable).
-  // Lake is now DOM-driven via lakeActive (set by SceneLake's
-  // ScrollTrigger), eliminating the "not in sync over the water" drift.
-  //
-  // Forest scene gated by `!lakeActive` so its tree banks vanish the
-  // instant the lake DOM section enters — otherwise dark trunks
-  // briefly composite over the water during the trails → lake camera
-  // transition.
-  // Mount windows shifted for the 5-card Stay layout (was 4-card).
-  // Total page grew from ~1570vh to ~1670vh, so every section past
-  // Stay sits ~0.06 progress later than the old windows assumed.
-  const inForest = progress > 0.49 && progress < 0.62 && !lakeActive;
+  // Mounts derived from DOM flags, not progress windows. The lake
+  // flag still suppresses forest so dark trunks don't composite over
+  // the water during the trails → lake handoff.
+  const inForest = forestActive && !lakeActive;
   const inLakeRange = lakeActive;
-  const inWelcomeRange = progress > 0.68 && progress < 0.92 && !lakeActive;
-  const inBookRange = progress > 0.86;
-  // Primitive Camp scene — back-corner clearing, mounted only while the
-  // 5th Stay card (Primitive Camp) is in view. Range covers the
-  // Serene-Seven → Primitive transition through the end of the Stay
-  // section so the camp is on-screen as the camera arrives.
-  const inPrimitiveRange = progress > 0.36 && progress < 0.46;
+  const inWelcomeRange = welcomeActive && !lakeActive;
+  const inBookRange = bookActive;
+  const inPrimitiveRange = primitiveActive;
 
   return (
     <>
