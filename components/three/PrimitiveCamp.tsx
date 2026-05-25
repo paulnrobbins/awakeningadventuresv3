@@ -168,12 +168,16 @@ export function PrimitiveCamp({
         </group>
       )}
 
-      {/* Forest-floor patch — slightly darker than the world's default
-          floor color so the clearing reads as "trampled by campers"
-          rather than pristine */}
+      {/* Forest-floor patch — same sage green as the world floor
+          (#3D4A30) but a touch darker / desaturated so the clearing
+          reads as "trampled by campers" rather than a foreign tile.
+          The world floor (in WorldScene) now extends to z=-50 and
+          covers this area, so this patch sits ON TOP of the world
+          floor at y=-0.16 (vs world's -0.18) as a subtle worn-in
+          overlay. Same green family — no visible seam. */}
       <mesh position={[0, -0.16, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[4.5, 24]} />
-        <meshStandardMaterial color="#2E281C" roughness={0.98} />
+        <circleGeometry args={[5.5, 24]} />
+        <meshStandardMaterial color="#34402B" roughness={0.98} />
       </mesh>
     </group>
   );

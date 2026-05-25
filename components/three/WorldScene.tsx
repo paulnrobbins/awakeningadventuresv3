@@ -137,13 +137,16 @@ export function WorldScene() {
       {/* Sun motes — daytime equivalent of the night star field */}
       <StarField count={Math.round(starCount * 0.4)} radius={40} />
 
-      {/* Forest floor — ALWAYS mounted but at a footprint that doesn't
-          reach into the lake area. Covers the property zone (centered
-          around the buildings at z=-5, extending 40m forward and 30m
-          back, 60m wide). The lake at z=-30+ is well outside this
-          patch so the lake water never has to compete with it. */}
-      <mesh position={[0, -0.18, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[60, 50, 1, 1]} />
+      {/* Forest floor — ALWAYS mounted. Extended (was 60×50 centered at
+          origin → 80×80 shifted south to [0, -0.18, -10]) so it now
+          reaches Z=-50 and covers the Primitive Camp clearing at
+          z=-32. Previously the floor stopped at z=-25, so the camp
+          sat over a void and its own brown floor-patch read as a
+          foreign tile against the rest of the scene. The lake at
+          z=-60+ stays outside this patch so the lake water still has
+          its own clean canvas. */}
+      <mesh position={[0, -0.18, -10]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[80, 80, 1, 1]} />
         <meshStandardMaterial color="#3D4A30" roughness={0.96} />
       </mesh>
     </>

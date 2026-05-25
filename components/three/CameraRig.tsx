@@ -70,22 +70,26 @@ const KEYFRAMES: CameraKeyframe[] = [
   // Driftwood
   { t: 0.190, pos: [16,   4.0,  -6.0], target: [22,  4.0,  -16] },
   // Homestead — Stay card #3, card on LEFT half of viewport. Camera
-  // east of the Homestead tent at [-22, 0, -6]; look-target shifted
-  // ~4m EAST of the tent so the tent renders LEFT of frame center,
-  // sitting behind the card.
-  { t: 0.255, pos: [-13,  2.0,   1.0], target: [-18, 1.2,   -6] },
+  // east of the Homestead tent at [-22, 0, -6]. Look-target shifted
+  // ~1m east of the tent (not 4m — that pushed the tent to the extreme
+  // left edge / off-screen). Now the tent lands ~25% left of frame
+  // center, large and clearly visible behind the card.
+  { t: 0.255, pos: [-16,  2.0,   1.0], target: [-21, 1.0,   -6] },
   // Serene Seven — Stay card #4, card on RIGHT. Pulled DOWN from the
   // old high-y=6.5 vantage (tent was rendering as a distant triangle)
   // to eye-level, and rotated so target sits west of the tent. Tent at
   // [-26, 0, -24] then renders on the RIGHT of the frame, behind the
   // card.
   { t: 0.320, pos: [-22,  2.4, -16],   target: [-30, 1.5,  -25] },
-  // Primitive Camp — Stay card #5, card on LEFT. NEW: a real 3D camp
-  // scene (fire ring, log seats, pup-tent silhouette) now mounts at
-  // world [-12, 0, -32] via PrimitiveCamp in WorldScene. Camera sits
-  // east of the camp looking back-and-west; target shifted east of the
-  // camp so the camp renders LEFT of frame, behind the card.
-  { t: 0.355, pos: [-4,   2.0, -22],   target: [-6,  1.0,  -32] },
+  // Primitive Camp — Stay card #5, card on LEFT. PrimitiveCamp scene
+  // lives at world [-12, 0, -32]. The previous keyframe looked at
+  // [-6, 1, -32] which put the camp 50%+ off the left edge of frame
+  // (Serene Seven's lingering silhouette read as "the" tent). Now the
+  // camera sits just east-and-in-front-of the camp at [-9, 1.6, -25],
+  // look-target only 1m east of the camp's X — camp renders ~36% left
+  // of frame center: comfortably behind the card and clearly the focal
+  // subject of the scene.
+  { t: 0.355, pos: [-9,   1.6, -25],   target: [-11, 0.6,  -32] },
   // Shower scene — text card on LEFT says "Shower in the trees", so
   // the Driftwood treehouse at [22, 0, -16] needs to render LEFT of
   // frame, behind the card (the previous keyframe pushed the treehouse
