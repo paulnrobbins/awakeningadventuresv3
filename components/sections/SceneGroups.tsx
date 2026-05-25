@@ -6,7 +6,6 @@ import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { sound } from '@/lib/sound';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ReviewMarquee } from '@/components/ui/ReviewMarquee';
-import { setCameraOverride, SCENE_TARGETS } from '@/lib/cameraOverride';
 
 /**
  * Scene 7 — Groups. Small-church retreat conversion path.
@@ -60,20 +59,9 @@ export function SceneGroups() {
 
     gsap.set(items, { opacity: 0, y: 32 });
 
-    // Camera trigger — full pull-back of the property fires when the
-    // Groups section is centered in viewport.
-    const cameraTrig = ScrollTrigger.create({
-      trigger: ref.current,
-      start: 'top center',
-      end: 'bottom center',
-      onEnter: () => setCameraOverride(SCENE_TARGETS.groups),
-      onEnterBack: () => setCameraOverride(SCENE_TARGETS.groups),
-    });
+    // Camera position handled by CameraRig's DOM-measured keyframes.
 
-    return () => {
-      trig.kill();
-      cameraTrig.kill();
-    };
+    return () => { trig.kill(); };
   }, [reduced]);
 
   return (

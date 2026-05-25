@@ -193,9 +193,18 @@ export const SCENE_TARGETS: Record<string, CameraOverride> = {
   // mounts via setForestActive.
   trails: { pos: [0, 2.0, -3], target: [0, 1.8, -18] },
 
-  // Lake — shoreside view with the dock and moored pontoon. Mount
+  // Lake — standing at the shore where the dock meets the water.
+  // LakeStage is positioned at world [0, 0, -30], with the shore at
+  // local z=+1.6 (world z=-28), the dock running from z=-30 to z=-38,
+  // and the moored pontoon at world [4.8, 0.05, -37]. Previous
+  // framing (camera at z=-22 looking at z=-40) read as "from across
+  // the property" — the lake felt distant. This frame puts the
+  // camera at z=-32 (past the shore, where the dock starts into the
+  // water), eye level at 1.6m, looking deep into the lake at z=-50.
+  // The moored pontoon at world x=4.8, z=-37 sits ~9m away — close
+  // enough to read as a real object, not a far silhouette. Mount
   // gated by setLakeActive (SceneLake owns this).
-  lake: { pos: [-7, 3.2, -22], target: [2, 0.4, -40] },
+  lake: { pos: [-2, 1.6, -32], target: [3, 0.3, -50] },
 
   // Welcome — sitting at the fire pit at world [-2, 0, -8]. Lowered
   // to seated-at-fire height with target dropped to flame-base so

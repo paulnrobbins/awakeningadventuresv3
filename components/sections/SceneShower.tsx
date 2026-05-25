@@ -4,18 +4,17 @@ import { useEffect, useRef } from 'react';
 import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LoopingVideo } from '@/components/ui/LoopingVideo';
-import { setCameraOverride, SCENE_TARGETS } from '@/lib/cameraOverride';
 
 /**
  * Shower in the Trees — bonus scene between Stay and Trails. The
  * treehouse shower is one of the property's signature features per
  * the live sanctuary page ("Best Treehouse Shower in Tennessee").
  *
- * Camera: ScrollTrigger fires setCameraOverride(SCENE_TARGETS.shower)
- * on enter so the Driftwood treehouse renders LEFT of frame behind
- * the card the moment the section enters view. No more guessing where
- * on the global-progress timeline this scene sits — the camera lands
- * exactly when the DOM section becomes visible.
+ * Camera: handled by CameraRig's DOM-measured keyframes — the rig
+ * reads this section's offsetTop on mount + resize and interpolates
+ * the camera between the adjacent shower/trails/stay positions
+ * continuously as the visitor scrolls. This component only owns the
+ * text fade in/out.
  */
 export function SceneShower() {
   const ref = useRef<HTMLDivElement>(null);
@@ -45,20 +44,13 @@ export function SceneShower() {
     });
     gsap.set(items, { opacity: 0, y: 28 });
 
-    // Camera override — fires when section enters viewport. start at
-    // 'top center' so the override lands as the visitor scrolls the
-    // section's top into the middle of the viewport.
-    const cameraTrig = ScrollTrigger.create({
-      trigger: ref.current,
-      start: 'top center',
-      end: 'bottom center',
-      onEnter: () => setCameraOverride(SCENE_TARGETS.shower),
-      onEnterBack: () => setCameraOverride(SCENE_TARGETS.shower),
-    });
+    // Camera position handled by CameraRig's DOM-measured keyframes
+    // (it reads this section's offsetTop on mount + resize). No
+    // override from here so the keyframe interpolation between shower
+    // and adjacent scenes stays continuous.
 
     return () => {
       fadeTrig.kill();
-      cameraTrig.kill();
     };
   }, [reduced]);
 

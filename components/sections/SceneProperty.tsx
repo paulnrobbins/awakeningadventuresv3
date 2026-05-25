@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { setCameraOverride, SCENE_TARGETS } from '@/lib/cameraOverride';
 
 /**
  * Scene 2 — The Property.
@@ -38,23 +37,14 @@ export function SceneProperty() {
       },
     });
 
-    // Camera trigger — fires when Property section enters viewport,
-    // landing the mid-descent camera. On scroll-up out of Property
-    // back into Hero, clear the override so CameraRig's Hero keyframe
-    // takes over for the aerial entrance.
-    const cameraTrig = ScrollTrigger.create({
-      trigger: ref.current,
-      start: 'top center',
-      end: 'bottom center',
-      onEnter: () => setCameraOverride(SCENE_TARGETS.property),
-      onEnterBack: () => setCameraOverride(SCENE_TARGETS.property),
-      onLeaveBack: () => setCameraOverride(null),
-    });
+    // Camera position is handled by CameraRig's DOM-measured keyframes
+    // (it queries this section's offsetTop on mount and rebuilds on
+    // resize), so no setCameraOverride from here — the override would
+    // SNAP the target and break the cinematic scrub between keyframes.
 
     return () => {
       tween.scrollTrigger?.kill();
       tween.kill();
-      cameraTrig.kill();
     };
   }, [reduced]);
 

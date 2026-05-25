@@ -6,11 +6,7 @@ import { ACCOMMODATIONS } from '@/content/accommodations';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LoopingVideo } from '@/components/ui/LoopingVideo';
 import { cn } from '@/lib/utils';
-import {
-  setCameraOverride,
-  setPrimitiveCampActive,
-  SCENE_TARGETS,
-} from '@/lib/cameraOverride';
+import { setPrimitiveCampActive } from '@/lib/cameraOverride';
 
 /**
  * Scene 3 — Stay.
@@ -44,13 +40,19 @@ export function SceneStay() {
       return;
     }
 
+    // Camera position for each accommodation is handled by CameraRig's
+    // DOM-measured keyframes (which read each article's data-accom and
+    // its offsetTop), so this scene only owns the text fades + the
+    // Primitive Camp mount flag. The fade triggers stay narrow ('top
+    // 70%' → 'bottom 30%') because they're about the COPY animating
+    // in/out; the camera follows scroll independently and continuously.
+
     const triggers: ScrollTrigger[] = [];
     items.forEach((item) => {
       const id = item.getAttribute('data-accom') ?? '';
-      const target = SCENE_TARGETS[id];
       const isPrimitive = id === 'primitive-camp';
 
-      // Trigger 1 — text fade in/out tied to the article's visibility.
+      // Text fade in/out tied to the article's visibility.
       const fadeTrig = ScrollTrigger.create({
         trigger: item,
         start: 'top 70%',
@@ -72,34 +74,19 @@ export function SceneStay() {
       gsap.set(item, { opacity: 0, y: 32 });
       triggers.push(fadeTrig);
 
-      // Trigger 2 — camera override + (for primitive) mount flag. Fires
-      // when the article becomes the active sticky card. The window
-      // 'top top' → 'bottom top' is exactly the 100vh during which
-      // this article is pinned and visible. setCameraOverride on
-      // enter + enter-back covers both scroll directions; the next
-      // article's onEnter replaces the override naturally on scroll-
-      // through.
-      if (target) {
-        const cameraTrig = ScrollTrigger.create({
+      // PrimitiveCamp 3D scene mount — narrower trigger window because
+      // it should only render while THIS card is the active sticky.
+      if (isPrimitive) {
+        const mountTrig = ScrollTrigger.create({
           trigger: item,
           start: 'top top',
           end: 'bottom top',
-          onEnter: () => {
-            setCameraOverride(target);
-            if (isPrimitive) setPrimitiveCampActive(true);
-          },
-          onEnterBack: () => {
-            setCameraOverride(target);
-            if (isPrimitive) setPrimitiveCampActive(true);
-          },
-          onLeave: () => {
-            if (isPrimitive) setPrimitiveCampActive(false);
-          },
-          onLeaveBack: () => {
-            if (isPrimitive) setPrimitiveCampActive(false);
-          },
+          onEnter: () => setPrimitiveCampActive(true),
+          onEnterBack: () => setPrimitiveCampActive(true),
+          onLeave: () => setPrimitiveCampActive(false),
+          onLeaveBack: () => setPrimitiveCampActive(false),
         });
-        triggers.push(cameraTrig);
+        triggers.push(mountTrig);
       }
     });
 

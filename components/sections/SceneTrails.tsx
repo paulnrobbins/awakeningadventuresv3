@@ -6,11 +6,7 @@ import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { sound } from '@/lib/sound';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LoopingVideo } from '@/components/ui/LoopingVideo';
-import {
-  setCameraOverride,
-  setForestActive,
-  SCENE_TARGETS,
-} from '@/lib/cameraOverride';
+import { setForestActive } from '@/lib/cameraOverride';
 
 /**
  * Scene 4 — The Trails. The rock bridge moment, told through
@@ -79,21 +75,11 @@ export function SceneTrails() {
       onLeaveBack: () => setForestActive(false),
     });
 
-    // Camera trigger — narrower, tied to the centered-in-viewport
-    // window so the camera lands on the trail corridor at the same
-    // moment the editorial copy fades in.
-    const cameraTrig = ScrollTrigger.create({
-      trigger: ref.current,
-      start: 'top center',
-      end: 'bottom center',
-      onEnter: () => setCameraOverride(SCENE_TARGETS.trails),
-      onEnterBack: () => setCameraOverride(SCENE_TARGETS.trails),
-    });
+    // Camera position handled by CameraRig's DOM-measured keyframes.
 
     return () => {
       trig.kill();
       mountTrig.kill();
-      cameraTrig.kill();
       setForestActive(false);
     };
   }, [reduced]);

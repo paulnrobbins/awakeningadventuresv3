@@ -6,11 +6,7 @@ import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { sound } from '@/lib/sound';
 import { REVIEWS } from '@/content/reviews';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import {
-  setCameraOverride,
-  setWelcomeActive,
-  SCENE_TARGETS,
-} from '@/lib/cameraOverride';
+import { setWelcomeActive } from '@/lib/cameraOverride';
 
 /**
  * Scene 6 — The Welcome.
@@ -85,22 +81,11 @@ export function SceneWelcome() {
       onLeaveBack: () => setWelcomeActive(false),
     });
 
-    // Camera trigger — fires when the centered "Hosted by us" card
-    // hits center of viewport, landing the camera at the fire pit so
-    // the embers/flame anchor the lower half of the frame behind the
-    // card.
-    const cameraTrig = ScrollTrigger.create({
-      trigger: ref.current,
-      start: 'top center',
-      end: 'bottom center',
-      onEnter: () => setCameraOverride(SCENE_TARGETS.welcome),
-      onEnterBack: () => setCameraOverride(SCENE_TARGETS.welcome),
-    });
+    // Camera position handled by CameraRig's DOM-measured keyframes.
 
     return () => {
       trig.kill();
       mountTrig.kill();
-      cameraTrig.kill();
       setWelcomeActive(false);
     };
   }, [reduced]);
