@@ -23,19 +23,23 @@ import { getCameraOverride, SCENE_TARGETS } from '@/lib/cameraOverride';
  * This pass emits TWO keyframes per section (start + end), both at
  * the same pos/target. The camera HOLDS at the section's position
  * through most of the section's scroll window, then TRANSITIONS in
- * the last 20-30vh to the next section's start keyframe. Result: the
- * camera composes on each scene's subject AND holds while the visitor
- * reads, then glides cinematically into the next.
+ * the last gap to the next section's start keyframe.
  *
- * Transition window per kind:
- *   - article (Stay sticky cards, ~100vh): last 20vh transitions
- *   - section (full scenes, 140-180vh):    last 30vh transitions
+ * Lead = 30vh (uniformly) — matches the GSAP fade-in trigger
+ * ('top 70%' = card's top 30vh below viewport top). The camera
+ * arrives at each scene exactly as the card starts fading in, not
+ * after it's already on screen.
  *
- * Lead per kind:
- *   - article: 0vh (camera arrives as the sticky activates)
- *   - section: 25vh (camera arrives slightly before the section's
- *               top reaches viewport top, so it's already composed
- *               when the section's copy becomes visible)
+ * Transition = 50vh (uniformly) — the tail of each section used to
+ * lerp toward the NEXT section's start keyframe. The 20vh leftover
+ * (transition - lead) is the transition ZONE — the visible scroll
+ * range where the camera is in motion between two scenes.
+ *
+ * Ordering invariant: for every adjacent pair, NEXT.lead ≤ PREV.transition.
+ * With 30 ≤ 50 uniformly the rule holds — keyframes stay monotonic
+ * and the camera never gets sorted into the wrong order (which was
+ * the cause of the oscillation around the Shower transition where
+ * the previous fix had section lead 25 > article transition 20).
  */
 
 type CameraKeyframe = {
@@ -96,16 +100,21 @@ function buildKeyframes(): CameraKeyframe[] {
     const top = rect.top + window.scrollY;
     const height = rect.height;
 
-    // Lead: how much earlier (in scroll-vh) the camera should arrive
-    // at this section's position. Sticky articles get 0vh because
-    // they only become the active sticky AT scroll = top. Non-sticky
-    // sections get 25vh so the camera is composed before the section's
-    // content is fully visible.
-    const leadVh = kind === 'article' ? 0 : 25;
-    // Transition window: how much of the section's TAIL is used to
-    // lerp toward the next section's keyframe. Smaller for articles
-    // (they have less scroll runway each) so they hold longer.
-    const transitionVh = kind === 'article' ? 20 : 30;
+    // Lead = how much earlier (in scroll-vh) the camera arrives at
+    // this section's position. 30vh matches the GSAP fade-in trigger
+    // ('top 70%' = card's top 30vh below viewport top) — camera lands
+    // as the card starts fading in, not after.
+    //
+    // Transition = the tail of this section's scroll range used to
+    // lerp toward the NEXT section's start keyframe.
+    //
+    // Critical invariant: transition ≥ next.lead. With 30/50 uniformly,
+    // this holds for every adjacent pair → keyframes stay monotonic,
+    // no oscillation. The 20vh gap between (transition 50 - lead 30)
+    // is the transition zone where camera lerps from one scene to next.
+    void kind; // both kinds use the same values for ordering safety
+    const leadVh = 30;
+    const transitionVh = 50;
 
     const leadPx = (leadVh / 100) * vh;
     const transitionPx = (transitionVh / 100) * vh;
@@ -208,8 +217,8 @@ export function CameraRig({ shake = 0 }: CameraRigProps) {
         tmpPos.current.y += Math.cos(t2 * 1.3) * 0.03 * shake;
       }
 
-      camera.position.lerp(tmpPos.current, 1 - Math.pow(0.06, delta));
-      currentTarget.current.lerp(tmpTarget.current, 1 - Math.pow(0.06, delta));
+      camera.position.lerp(tmpPos.current, 1 - Math.pow(0.001, delta));
+      currentTarget.current.lerp(tmpTarget.current, 1 - Math.pow(0.001, delta));
       camera.lookAt(currentTarget.current);
       return;
     }
@@ -217,8 +226,8 @@ export function CameraRig({ shake = 0 }: CameraRigProps) {
     // PROGRESS PATH — continuous lerp between DOM-measured keyframes.
     // This is what produces the cinematic glide: as the visitor scrolls,
     // the camera target moves smoothly along the path defined by
-    // adjacent keyframes, and the 0.06 lerp damps Lenis-frame jitter
-    // without lagging visibly behind.
+    // adjacent keyframes, and the position lerp below damps Lenis-frame
+    // jitter without lagging visibly behind.
     const frames = keyframes.current;
     if (frames.length === 0) return;
 
@@ -257,12 +266,14 @@ export function CameraRig({ shake = 0 }: CameraRigProps) {
       tmpPos.current.y += Math.cos(t2 * 1.3) * 0.03 * shake;
     }
 
-    // 0.06 smoothing — cinematic-glide that damps Lenis micro-jitter
-    // without lagging behind the user's scroll. The continuous lerp
-    // BETWEEN keyframes (above) is what makes scene-to-scene motion
-    // feel scrubbed; this smoothing just polishes the per-frame jitter.
-    camera.position.lerp(tmpPos.current, 1 - Math.pow(0.06, delta));
-    currentTarget.current.lerp(tmpTarget.current, 1 - Math.pow(0.06, delta));
+    // 0.001 smoothing — tight enough that the camera tracks the
+    // scroll-derived target with ~0.2s catch-up (vs ~0.5–1s at the
+    // old 0.06 value, which made the camera arrive at scenes well
+    // after the card was already visible). The continuous keyframe
+    // interpolation above is what provides scene-to-scene smoothness;
+    // this position lerp only damps per-frame Lenis micro-jitter.
+    camera.position.lerp(tmpPos.current, 1 - Math.pow(0.001, delta));
+    currentTarget.current.lerp(tmpTarget.current, 1 - Math.pow(0.001, delta));
     camera.lookAt(currentTarget.current);
   });
 
