@@ -62,10 +62,16 @@
     text-wrap: pretty;
   }
 
-  /* Translucent card surface for homepage scenes — 25% white background,
-     no blur, subtle border. Applied to every text card from the hero
-     through the Groups (For pastors...) section so they read as soft
-     glass panels over the 3D world without obscuring the scene behind. */
+  /* Translucent card surface for homepage scenes — default is a
+     neutral ~25% white wash that reads as a soft glass panel over
+     the 3D world. The three tint variants below shift the wash
+     toward the scene's atmospheric mood:
+       .home-card-cool   — pale blue (lake)
+       .home-card-warm   — golden amber (welcome fire pit, groups dusk)
+       .home-card-forest — sage green (trails / forest scenes)
+     The tints are intentionally subtle — they should reinforce mood,
+     not call attention to themselves. Border + background shift
+     together so the panel reads as a coherent piece of glass. */
   .home-card {
     background: rgba(255, 255, 255, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.32);
@@ -76,6 +82,21 @@
     .home-card {
       padding: 2.5rem;
     }
+  }
+
+  .home-card.home-card-cool {
+    background: rgba(195, 220, 235, 0.22);
+    border-color: rgba(195, 220, 235, 0.40);
+  }
+
+  .home-card.home-card-warm {
+    background: rgba(255, 218, 168, 0.22);
+    border-color: rgba(255, 200, 145, 0.42);
+  }
+
+  .home-card.home-card-forest {
+    background: rgba(190, 215, 185, 0.22);
+    border-color: rgba(165, 200, 160, 0.38);
   }
 
   /* readable-card / readable-pill were removed — text now renders

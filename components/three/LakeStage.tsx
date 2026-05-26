@@ -49,6 +49,72 @@ export function LakeStage() {
           gives the visitor a target for "the island campsite". */}
       <Island position={[36, -0.3, -60]} />
       <Island position={[-44, -0.3, -78]} scale={0.6} />
+
+      {/* Gliding birds — 3 silhouettes drifting across the sky at
+          different heights, speeds, and phase offsets so there's
+          almost always one in frame but they never feel synchronized.
+          Sells "activity" / "the lake is alive" without adding
+          competing motion to the foreground. Each pass is ~50sec so
+          the camera reads them as soaring, not flapping past. */}
+      <FlyingBird startX={-55} endX={55} y={9.5} period={52} delay={0} />
+      <FlyingBird startX={55} endX={-55} y={7.2} period={64} delay={18} />
+      <FlyingBird startX={-55} endX={55} y={11.0} period={58} delay={34} />
+    </group>
+  );
+}
+
+/**
+ * A bird-shaped silhouette drifting across the sky. Two thin angled
+ * planes form a flat V (no flapping wings — at this distance the eye
+ * reads the V as bird and motion is provided by the X-traverse + a
+ * gentle vertical sin sway).
+ *
+ * The bird wraps continuously: when it reaches endX it teleports back
+ * to startX. The teleport is invisible because the bird is far above
+ * the camera and at the edge of the horizon.
+ */
+function FlyingBird({
+  startX,
+  endX,
+  y,
+  period,
+  delay = 0,
+}: {
+  startX: number;
+  endX: number;
+  y: number;
+  period: number;
+  delay?: number;
+}) {
+  const ref = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const t = clock.getElapsedTime() + delay;
+    const phase = ((t % period) / period); // 0..1
+    const x = startX + phase * (endX - startX);
+    // Gentle soar — slow vertical sin, slight banking roll
+    const yOffset = Math.sin(t * 0.45) * 0.4 + Math.sin(t * 0.13) * 0.6;
+    const bank = Math.sin(t * 0.6) * 0.18;
+    ref.current.position.set(x, y + yOffset, -55);
+    ref.current.rotation.z = bank;
+    // Face direction of travel (flip the wing V depending on which
+    // way we're going across the sky)
+    ref.current.rotation.y = endX > startX ? 0 : Math.PI;
+  });
+
+  return (
+    <group ref={ref}>
+      {/* Left wing */}
+      <mesh position={[-0.22, 0, 0]} rotation={[0, 0, -0.35]}>
+        <planeGeometry args={[0.45, 0.10]} />
+        <meshBasicMaterial color="#1A2018" side={THREE.DoubleSide} />
+      </mesh>
+      {/* Right wing */}
+      <mesh position={[0.22, 0, 0]} rotation={[0, 0, 0.35]}>
+        <planeGeometry args={[0.45, 0.10]} />
+        <meshBasicMaterial color="#1A2018" side={THREE.DoubleSide} />
+      </mesh>
     </group>
   );
 }

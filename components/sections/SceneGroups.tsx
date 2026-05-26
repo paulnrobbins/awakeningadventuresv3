@@ -71,7 +71,7 @@ export function SceneGroups() {
       className="scene flex flex-col justify-center"
       data-scene="groups"
     >
-      <div className="home-card relative z-[var(--z-content)] max-w-[68rem]">
+      <div className="home-card home-card-warm relative z-[var(--z-content)] max-w-[68rem]">
         <p data-groups-anim className="eyebrow text-cream/75 mb-6">
           Set apart
         </p>

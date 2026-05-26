@@ -2,31 +2,47 @@
 
 import { Environment } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { hdriUrl } from '@/lib/three';
+import { getLenis } from '@/lib/lenis';
 import { SCENES, type SceneConfig } from '@/content/scenes';
 import { clamp } from '@/lib/utils';
 import { WorldErrorBoundary } from './WorldErrorBoundary';
 
 /**
  * Drives scene-level lighting & fog from global scroll progress.
- * Daytime build: warm ambient + a sun-color directional from the
- * south-east, both bright enough to read as real-world midday.
- * Fog colors come from each scene's config and are warm paper or
- * sage tints rather than night-black.
+ *
+ * Perf note: this component owns its OWN Lenis subscription rather
+ * than taking a `progress` prop from the parent. The previous prop-
+ * based design meant WorldScene held a `progress` state that updated
+ * at 60Hz during scroll — triggering a full React re-render of the
+ * entire 3D component tree (TreeBank, every conditional Stage, every
+ * floor mesh) sixty times per second. Now the 60Hz updates stay
+ * isolated INSIDE this component. WorldScene only re-renders on the
+ * rare mount-flag changes.
+ *
+ * The internal state tracks only the active scene INDEX (0..N), not
+ * raw progress. So this component itself only re-renders when the
+ * visitor crosses a scene boundary — typically once or twice per
+ * scroll-through.
  */
-interface EnvironmentRigProps {
-  progress: number;
-}
-
-export function EnvironmentRig({ progress }: EnvironmentRigProps) {
+export function EnvironmentRig() {
   const { scene } = useThree();
+  const [sceneIdx, setSceneIdx] = useState(0);
 
-  const activeScene: SceneConfig = useMemo(() => {
-    const idx = clamp(Math.floor(progress * SCENES.length), 0, SCENES.length - 1);
-    return SCENES[idx];
-  }, [progress]);
+  useEffect(() => {
+    const lenis = getLenis();
+    if (!lenis) return;
+    const handler = ({ progress }: { progress: number }) => {
+      const next = clamp(Math.floor(progress * SCENES.length), 0, SCENES.length - 1);
+      setSceneIdx((prev) => (prev === next ? prev : next));
+    };
+    lenis.on('scroll', handler);
+    return () => lenis.off('scroll', handler);
+  }, []);
+
+  const activeScene: SceneConfig = useMemo(() => SCENES[sceneIdx], [sceneIdx]);
 
   useEffect(() => {
     const color = new THREE.Color(activeScene.fog);

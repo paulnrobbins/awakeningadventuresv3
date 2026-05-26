@@ -95,7 +95,7 @@ export function SceneTrails() {
         {/* TEXT first in DOM so mobile shows it before the media. On
             desktop, lg:order-2 pushes it back to the right column,
             preserving the existing media-left / text-right layout. */}
-        <div className="home-card lg:col-span-6 lg:order-2 text-center lg:text-left">
+        <div className="home-card home-card-forest lg:col-span-6 lg:order-2 text-center lg:text-left">
           <p data-trail-anim className="eyebrow text-cream/75 mb-6">Walk the trails</p>
           <p data-trail-anim className="font-display text-display text-cream leading-[1.0]">
             Three miles of trail, a perspective platform, prayer

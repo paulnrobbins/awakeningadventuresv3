@@ -98,6 +98,29 @@ async function ensureCue(key: SceneSoundKey): Promise<HowlInstance | null> {
   }
 }
 
+// Pause audio when the tab is hidden. Howler keeps decoding audio
+// in backgrounded tabs by default; muting on visibility change cuts
+// the CPU/battery cost of long-loop ambient cues (forest, crickets,
+// fire-crackle, etc.) while the visitor is in another tab. The
+// previous user-mute state is restored when the tab returns to
+// visible — if the visitor had unmuted, they hear sound again
+// without needing to click anything.
+if (typeof document !== 'undefined') {
+  let wasMutedByUser = true;
+  document.addEventListener('visibilitychange', () => {
+    getHowler().then((lib) => {
+      if (!lib) return;
+      if (document.visibilityState === 'hidden') {
+        wasMutedByUser = muted;
+        try { lib.Howler.mute(true); } catch { /* ignore */ }
+      } else {
+        // restore previous mute state
+        try { lib.Howler.mute(wasMutedByUser); } catch { /* ignore */ }
+      }
+    });
+  });
+}
+
 export const sound = {
   /**
    * One-shot play. Always loads + plays the cue; Howler's global mute

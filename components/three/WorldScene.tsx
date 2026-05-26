@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getLenis } from '@/lib/lenis';
 import { useDeviceTier } from '@/hooks/useDeviceTier';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
@@ -40,28 +39,23 @@ import { PrimitiveCamp } from './PrimitiveCamp';
 export function WorldScene() {
   const tier = useDeviceTier();
   const reduced = useReducedMotion();
-  const [progress, setProgress] = useState(0);
 
-  // All scene mount flags are now DOM-driven — each Scene component
-  // owns a ScrollTrigger that flips its flag when its <section> enters
-  // and leaves the viewport. This replaces the old guessed-from-
-  // progress windows that caused content to mount briefly then vanish
-  // when section heights changed.
+  // PERF — the previous design held a `progress` state updated at 60Hz
+  // by Lenis, which forced a full WorldScene re-render every scroll
+  // tick (= the entire 3D component tree reconciling). The Lenis
+  // subscription now lives inside EnvironmentRig (its only consumer),
+  // so WorldScene re-renders only when one of the mount flags below
+  // toggles — typically a few times per scroll-through instead of
+  // dozens per second.
+  //
+  // All scene mount flags are DOM-driven — each Scene component owns
+  // a ScrollTrigger that flips its flag when its <section> enters and
+  // leaves the viewport.
   const [lakeActive, setLakeActive] = useState(false);
   const [forestActive, setForestActive] = useState(false);
   const [welcomeActive, setWelcomeActive] = useState(false);
   const [primitiveActive, setPrimitiveActive] = useState(false);
   const [bookActive, setBookActive] = useState(false);
-
-  useEffect(() => {
-    const lenis = getLenis();
-    if (!lenis) return;
-    const handler = ({ progress: p }: { progress: number }) => {
-      setProgress((prev) => (Math.abs(prev - p) > 0.002 ? p : prev));
-    };
-    lenis.on('scroll', handler);
-    return () => lenis.off('scroll', handler);
-  }, []);
 
   useEffect(() => subscribeLakeActive(setLakeActive), []);
   useEffect(() => subscribeForestActive(setForestActive), []);
@@ -88,7 +82,7 @@ export function WorldScene() {
 
   return (
     <>
-      <EnvironmentRig progress={progress} />
+      <EnvironmentRig />
       <CameraRig shake={cameraShake} />
 
       <PropertyLayout />
