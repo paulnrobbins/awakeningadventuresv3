@@ -25,21 +25,27 @@ import { getCameraOverride, SCENE_TARGETS } from '@/lib/cameraOverride';
  * through most of the section's scroll window, then TRANSITIONS in
  * the last gap to the next section's start keyframe.
  *
- * Lead = 30vh (uniformly) — matches the GSAP fade-in trigger
- * ('top 70%' = card's top 30vh below viewport top). The camera
- * arrives at each scene exactly as the card starts fading in, not
- * after it's already on screen.
+ * Lead = 30vh — the camera arrives at each scene exactly when its
+ * card starts fading in (GSAP `'top 70%'` = card top 30vh below the
+ * viewport top).
  *
- * Transition = 50vh (uniformly) — the tail of each section used to
- * lerp toward the NEXT section's start keyframe. The 20vh leftover
- * (transition - lead) is the transition ZONE — the visible scroll
- * range where the camera is in motion between two scenes.
+ * Hold = 10vh — a small window during which the camera "anchors" on
+ * the scene before starting to glide toward the next. Just enough
+ * for the visitor to register the composition; not so long that the
+ * camera reads as static.
  *
- * Ordering invariant: for every adjacent pair, NEXT.lead ≤ PREV.transition.
- * With 30 ≤ 50 uniformly the rule holds — keyframes stay monotonic
- * and the camera never gets sorted into the wrong order (which was
- * the cause of the oscillation around the Shower transition where
- * the previous fix had section lead 25 > article transition 20).
+ * Everything else is transition. With hold=10vh, the transition
+ * zone between two adjacent scenes is `sectionHeight − 10vh`:
+ *   - article (100vh) → 90vh of continuous motion
+ *   - section (140vh) → 130vh of continuous motion
+ *   - lake (180vh)    → 170vh of continuous motion
+ *
+ * So the camera is in motion through ~90%+ of every scroll position.
+ * No more hold/snap/hold rhythm — the visitor experiences a single
+ * continuous cinematic-scrub from the first scene to the last.
+ *
+ * Ordering invariant: HOLD ≤ section height. Trivially satisfied at
+ * hold=10vh for every section type — no oscillation possible.
  */
 
 type CameraKeyframe = {
@@ -105,31 +111,36 @@ function buildKeyframes(): CameraKeyframe[] {
     // ('top 70%' = card's top 30vh below viewport top) — camera lands
     // as the card starts fading in, not after.
     //
-    // Transition = the tail of this section's scroll range used to
-    // lerp toward the NEXT section's start keyframe.
+    // Hold = how long (in scroll-vh) the camera anchors on this
+    // scene before starting to glide toward the next. Just 10vh —
+    // long enough to register the composition, short enough that the
+    // overwhelming majority of every section is continuous motion.
     //
-    // Critical invariant: transition ≥ next.lead. With 30/50 uniformly,
-    // this holds for every adjacent pair → keyframes stay monotonic,
-    // no oscillation. The 20vh gap between (transition 50 - lead 30)
-    // is the transition zone where camera lerps from one scene to next.
-    void kind; // both kinds use the same values for ordering safety
+    // Ordering: hold ≤ sectionHeight — trivially satisfied for every
+    // section type, so keyframes stay monotonic. No oscillation.
+    void kind; // same values for both — kept for future per-kind tuning
     const leadVh = 30;
-    const transitionVh = 50;
+    const holdVh = 10;
 
     const leadPx = (leadVh / 100) * vh;
-    const transitionPx = (transitionVh / 100) * vh;
+    const holdPx = (holdVh / 100) * vh;
 
-    // Start keyframe — camera arrives at this section's position.
+    // Start keyframe — camera arrives at this section's position
+    // exactly when its card begins fading in.
     const startT = clamp((top - leadPx) / maxScroll, 0.001, 0.999);
-    // End keyframe — camera is STILL at this section's position
-    // (same pos/target). Transition to the next section happens
-    // between this keyframe and the next section's start keyframe.
-    const endT = clamp((top + height - transitionPx) / maxScroll, 0.001, 0.999);
+    // End keyframe — placed just `hold` further along, same pos/target.
+    // Between start and end the camera anchors; between end and the
+    // NEXT section's start keyframe the camera glides continuously
+    // through ~90%+ of the section's scroll range.
+    const endT = clamp((top - leadPx + holdPx) / maxScroll, 0.001, 0.999);
 
     frames.push({ t: startT, ...targetCfg });
     if (endT > startT + 0.001) {
       frames.push({ t: endT, ...targetCfg });
     }
+
+    // suppress unused warning if height ever becomes diagnostic only
+    void height;
   }
 
   // Footer hold — same as Book so the camera doesn't drift after the
