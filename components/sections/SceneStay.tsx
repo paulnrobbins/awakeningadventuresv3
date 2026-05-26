@@ -74,13 +74,21 @@ export function SceneStay() {
       gsap.set(item, { opacity: 0, y: 32 });
       triggers.push(fadeTrig);
 
-      // PrimitiveCamp 3D scene mount — narrower trigger window because
-      // it should only render while THIS card is the active sticky.
+      // PrimitiveCamp 3D scene mount — WIDE trigger window. The camera
+      // holds at the Primitive Camp position from ~30vh BEFORE the
+      // article becomes sticky through ~60vh into its sticky window
+      // (90vh hold per CameraRig's per-section override). So the
+      // mount needs to cover from before the article enters viewport
+      // until well past it. 'top bottom' starts mounting as soon as
+      // the article's top hits the viewport bottom (~100vh before
+      // sticky); 'bottom top+=200' keeps it mounted ~200vh past the
+      // article's natural bottom, well outside any possible camera
+      // hold zone overlap.
       if (isPrimitive) {
         const mountTrig = ScrollTrigger.create({
           trigger: item,
-          start: 'top top',
-          end: 'bottom top',
+          start: 'top bottom',
+          end: 'bottom top+=200',
           onEnter: () => setPrimitiveCampActive(true),
           onEnterBack: () => setPrimitiveCampActive(true),
           onLeave: () => setPrimitiveCampActive(false),

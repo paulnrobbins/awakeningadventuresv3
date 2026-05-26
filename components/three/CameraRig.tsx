@@ -112,15 +112,23 @@ function buildKeyframes(): CameraKeyframe[] {
     // as the card starts fading in, not after.
     //
     // Hold = how long (in scroll-vh) the camera anchors on this
-    // scene before starting to glide toward the next. Just 10vh —
-    // long enough to register the composition, short enough that the
-    // overwhelming majority of every section is continuous motion.
+    // scene before starting to glide toward the next. Default 10vh
+    // for the continuous-motion feel.
     //
-    // Ordering: hold ≤ sectionHeight — trivially satisfied for every
-    // section type, so keyframes stay monotonic. No oscillation.
+    // Per-section override: Primitive Camp uses a 90vh hold because
+    // it's the only scene where the 3D content is a unique destination
+    // at a specific world position (back corner [-12, 0, -32]) with
+    // nothing else visible nearby. With the default 10vh hold the
+    // camera flies past the camp before the visitor reaches the card,
+    // leaving just green floor in view. 90vh keeps the camera at the
+    // camp through most of the card's reading window.
+    //
+    // Ordering: hold ≤ sectionHeight - 10vh (to leave a small
+    // transition window). Article height is 100vh, so hold ≤ 90vh.
+    // 90 fits exactly with a 10vh transition to the next scene.
     void kind; // same values for both — kept for future per-kind tuning
     const leadVh = 30;
-    const holdVh = 10;
+    const holdVh = id === 'primitive-camp' ? 90 : 10;
 
     const leadPx = (leadVh / 100) * vh;
     const holdPx = (holdVh / 100) * vh;
