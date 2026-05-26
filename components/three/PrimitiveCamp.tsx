@@ -168,15 +168,20 @@ export function PrimitiveCamp({
         </group>
       )}
 
-      {/* Forest-floor patch — same sage green as the world floor
-          (#3D4A30) but a touch darker / desaturated so the clearing
-          reads as "trampled by campers" rather than a foreign tile.
-          The world floor (in WorldScene) now extends to z=-50 and
-          covers this area, so this patch sits ON TOP of the world
-          floor at y=-0.16 (vs world's -0.18) as a subtle worn-in
-          overlay. Same green family — no visible seam. */}
+      {/* Forest-floor patch — same sage-green family as the world
+          floor in WorldScene (#3D4A30) but a touch darker /
+          desaturated so the clearing reads as "trampled by campers"
+          rather than a pristine field. The world floor stops at
+          z=-25 (it was extended once, but that bled into the lake
+          area and made the dock + boat sit on grass), so this patch
+          has to be LARGE enough to cover the entire visible area
+          while the camera is composed on the camp — otherwise the
+          camera sees void cream beyond the patch's edge. 30×35 at
+          local origin gives the camera at world [-9, 1.6, -25]
+          looking at [-11, 0.6, -32] a continuous green floor through
+          the full frustum. */}
       <mesh position={[0, -0.16, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[5.5, 24]} />
+        <planeGeometry args={[30, 35, 1, 1]} />
         <meshStandardMaterial color="#34402B" roughness={0.98} />
       </mesh>
     </group>
