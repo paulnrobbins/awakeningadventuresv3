@@ -115,20 +115,26 @@ function buildKeyframes(): CameraKeyframe[] {
     // scene before starting to glide toward the next. Default 10vh
     // for the continuous-motion feel.
     //
-    // Per-section override: Primitive Camp uses a 90vh hold because
-    // it's the only scene where the 3D content is a unique destination
-    // at a specific world position (back corner [-12, 0, -32]) with
-    // nothing else visible nearby. With the default 10vh hold the
-    // camera flies past the camp before the visitor reaches the card,
-    // leaving just green floor in view. 90vh keeps the camera at the
-    // camp through most of the card's reading window.
+    // Per-section override: Primitive Camp uses a 50vh hold (vs the
+    // default 10vh) because it's the only scene where the 3D content
+    // is a unique destination at a specific world position (back
+    // corner [-12, 0, -32]) with nothing else visible nearby. The
+    // 10vh default left the camp invisible during the card; the
+    // earlier 90vh override made the camp visible but left only
+    // 10vh for the transition to Shower (a perceptible jolt).
     //
-    // Ordering: hold ≤ sectionHeight - 10vh (to leave a small
-    // transition window). Article height is 100vh, so hold ≤ 90vh.
-    // 90 fits exactly with a 10vh transition to the next scene.
+    // 50vh hold is the balance: 20vh of camp visibility during the
+    // user's actual card-reading window (scroll 640-660), then a
+    // 50vh transition (scroll 660-710) toward Shower that's about
+    // 55% as long as the typical 90vh inter-section transitions —
+    // fast-ish but continuous rather than jolty.
+    //
+    // Ordering: hold + lead ≤ sectionHeight (100vh for articles), so
+    // 50 + 30 = 80 ≤ 100 ✓, with 20vh of transition room beyond
+    // (next.lead=30, gap=20vh+).
     void kind; // same values for both — kept for future per-kind tuning
     const leadVh = 30;
-    const holdVh = id === 'primitive-camp' ? 90 : 10;
+    const holdVh = id === 'primitive-camp' ? 50 : 10;
 
     const leadPx = (leadVh / 100) * vh;
     const holdPx = (holdVh / 100) * vh;
