@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Nav } from '@/components/layout/Nav';
 import { Footer } from '@/components/sections/Footer';
+import { FaqAccordion, type FaqItem } from '@/components/ui/FaqAccordion';
 
 export const metadata = {
   title: 'FAQ',
@@ -112,7 +113,7 @@ const FAQS: FAQ[] = [
   },
   {
     q: 'Can I celebrate a small event or gather with a group on-site?',
-    a: 'Small gatherings are allowed with prior approval. There are communal spaces for evenings and meals, but amplified music and large parties are restricted to preserve tranquility for all guests.',
+    a: 'Small gatherings are fine with prior approval. The shared spaces work well for evenings and meals. We do keep amplified music and large parties off the property so other guests can still hear the woods.',
   },
   {
     q: 'Where can I find trail maps and local guide recommendations?',
@@ -167,39 +168,16 @@ export default function FAQPage() {
         </header>
 
         <section className="mt-16 max-w-[68rem]">
-          <ul className="divide-y divide-cream/15 border-t border-b border-cream/15">
-            {FAQS.map((item, i) => (
-              <li key={i}>
-                <details className="group">
-                  <summary
-                    className="
-                      flex items-start justify-between gap-6
-                      cursor-pointer list-none
-                      py-6
-                      font-display text-lede text-cream
-                      transition-colors duration-300
-                      hover:text-amber
-                    "
-                  >
-                    <span>{item.q}</span>
-                    <span
-                      aria-hidden="true"
-                      className="
-                        shrink-0 mt-2 text-amber
-                        transition-transform duration-300
-                        group-open:rotate-45
-                      "
-                    >
-                      +
-                    </span>
-                  </summary>
-                  <p className="font-sans text-body text-cream/85 leading-[1.62] pb-6 pr-12 max-w-[60rem]">
-                    {renderAnswer(item.a)}
-                  </p>
-                </details>
-              </li>
-            ))}
-          </ul>
+          {/* Smooth Framer Motion accordion — replaces the previous
+              native <details> elements which snap open/closed without
+              easing. The new component animates height + opacity on
+              expand/collapse and morphs the +/− icon with a spring. */}
+          <FaqAccordion
+            items={FAQS.map<FaqItem>((item) => ({
+              q: item.q,
+              a: renderAnswer(item.a),
+            }))}
+          />
         </section>
 
         <section className="mt-16 max-w-[60rem] flex flex-col md:flex-row gap-6">

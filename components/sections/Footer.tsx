@@ -49,6 +49,7 @@ export function Footer() {
               <li><Link href="/reviews" className="hover:text-amber transition-colors">Reviews</Link></li>
               <li><Link href="/faq" className="hover:text-amber transition-colors">FAQ</Link></li>
               <li><Link href="/contact" className="hover:text-amber transition-colors">Contact</Link></li>
+              <li><Link href="/credits" className="hover:text-amber transition-colors">Credits</Link></li>
               <li><Link href="/tree-platform-builders" className="hover:text-amber transition-colors">Need a Tree Platform Built? Hire Us.</Link></li>
             </ul>
           </nav>

@@ -44,10 +44,10 @@ export default function SanctuaryPage() {
             Forty-two acres of refuge to seek the Lord our God.
           </h1>
           <p className="editorial mt-8 text-cream">
-            Sojourners, stewarding what the Lord has provided. A place to relax,
-            be still, and take in the peace and quiet. Set aside the noise and
-            distraction of the world to practice listening prayer. Experience
-            God in a real, tangible way.
+            Sojourners, stewarding what the Lord has provided. A place to
+            relax, be still, and take in the peace and quiet. Set aside the
+            noise and distraction of the world. Listen for what God has to
+            say up here.
           </p>
         </header>
 
@@ -199,11 +199,11 @@ export default function SanctuaryPage() {
             />
           </div>
           <p className="editorial mt-6 text-cream">
-            An 8&times;16 platform nestled in two red oaks, just inside the
+            An 8&times;16 platform built into two red oaks, just inside the
             forest. At eye level you&rsquo;re looking out at twenty-two feet
-            above ground. A two-stage bridge gets you up to it. Favorite times
-            are when the sun first lights the canopy in the morning, and again
-            when it sets behind the ridge in the evening.
+            above the ground. A two-stage bridge gets you up to it. Favorite
+            times are when the sun first lights the canopy in the morning,
+            and again when it sets behind the ridge in the evening.
           </p>
         </section>
 

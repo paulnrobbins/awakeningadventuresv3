@@ -99,21 +99,20 @@ export function SceneTrails() {
           <p data-trail-anim className="eyebrow text-cream/75 mb-6">Walk the trails</p>
           <p data-trail-anim className="font-display text-display text-cream leading-[1.0]">
             Three miles of trail, a perspective platform, prayer
-            shelter, and rock bridge. The perfect place to reflect and
-            seek God and His presence.
+            shelter, and rock bridge. Quiet enough to actually hear
+            yourself pray.
           </p>
           <p data-trail-anim className="editorial mt-8 text-cream lg:mx-0 mx-auto">
-            Reconnect with your Creator through prayer trails led by host
-            Anthony. View God&rsquo;s creation from the perspective
-            platform, walk the rock bridge, and feel God&rsquo;s presence
-            in the prayer shelter.
+            Walk with host Anthony. Climb the perspective platform,
+            cross the rock bridge, sit a while in the prayer shelter.
+            Plenty of room to seek God on your own pace.
           </p>
           <Link
             data-trail-anim
             href="/sanctuary"
             className="cta-primary mt-10 inline-flex"
           >
-            Learn more
+            See the sanctuary
           </Link>
         </div>
 

@@ -140,7 +140,8 @@ export default function AdventuresPage() {
               chamber — about 45 minutes to change lakes. You&rsquo;ll see
               the nuclear plant cooling towers up close from the water on the
               way down to Chickamauga Lake. Sunset return into the marina is
-              breathtaking. 15–20 miles round trip, three to four hours.
+              the part most guests remember. 15–20 miles round trip, three to
+              four hours.
             </p>
             <p className="font-sans text-caption text-cream/70 mt-3">
               Up to six total passengers. Suggested: hat, sunglasses, weather-appropriate

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { gsap, ScrollTrigger } from '@/lib/gsap';
 import { sound } from '@/lib/sound';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { ReviewMarquee } from '@/components/ui/ReviewMarquee';
+import { TestimonialsMarquee } from '@/components/ui/TestimonialsMarquee';
 
 /**
  * Scene 7 — Groups. Small-church retreat conversion path.
@@ -71,7 +71,7 @@ export function SceneGroups() {
       className="scene flex flex-col justify-center"
       data-scene="groups"
     >
-      <div className="home-card home-card-warm relative z-[var(--z-content)] max-w-[68rem]">
+      <div className="home-card relative z-[var(--z-content)] max-w-[68rem]">
         <p data-groups-anim className="eyebrow text-cream/75 mb-6">
           Set apart
         </p>
@@ -92,12 +92,15 @@ export function SceneGroups() {
         </Link>
       </div>
 
-      {/* Real reviews scrolling underneath — two rows in opposite directions */}
+      {/* Real reviews — three vertical columns of testimonial cards
+          scrolling upward at slightly different speeds. Sourced from a
+          21st-dev pattern, then adapted to AA's palette + brand. Uses
+          framer-motion for the marquee loop and the hover-lift spring. */}
       <div
         data-groups-anim
-        className="relative z-[var(--z-content)] mt-16 md:mt-20 -mx-section-x"
+        className="relative z-[var(--z-content)] mt-16 md:mt-20"
       >
-        <ReviewMarquee />
+        <TestimonialsMarquee />
       </div>
     </section>
   );

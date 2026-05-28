@@ -9,6 +9,7 @@ import { ShowerHouse } from './ShowerHouse';
 import { PhotoBillboard } from './PhotoBillboard';
 import { Firefly } from './Firefly';
 import { FirePit } from './FirePit';
+import { SketchfabFirePit } from './SketchfabFirePit';
 import { useDeviceTier } from '@/hooks/useDeviceTier';
 import { WorldErrorBoundary } from './WorldErrorBoundary';
 
@@ -59,20 +60,19 @@ export function PropertyLayout() {
 
       <ShowerHouse position={[20, 0, 8]} rotationY={-Math.PI / 4} glowIntensity={0.15} />
 
-      {/* Welcome fire pit — moved here from WelcomeStage so it's
-          ALWAYS mounted. Previously the fire mounted only when
-          SceneWelcome's ScrollTrigger fired, which meant the camera's
-          continuous lerp from Lake to Welcome had nothing to look at
-          until the very end of the transition — fire appeared
-          "out of nowhere" at scroll ~topLake+150. Now it's a
-          permanent property feature: visible as a tiny distant glow
-          during aerial scenes, growing in the frame as the camera
-          approaches Welcome. The flickering point light is small
-          (distance=9, intensity ~1.6) so it doesn't blow out other
-          scenes. PhotoBillboards stay in WelcomeStage — they're
-          texture-heavy and only relevant when camera is close. */}
+      {/* Welcome fire pit — Sketchfab GLB ("Glowing Campfire With
+          Stones, Coal and Logs" by Dennis, CC-BY 4.0, compressed
+          to ~18 MB). Wrapped in Suspense + ErrorBoundary so a
+          failed/slow GLB load falls back to the procedural FirePit
+          — the welcome scene never goes dark. Always mounted so
+          the camera always has something warm to look at as it
+          drifts from Lake → Welcome. */}
       <group position={[-2, 0, -8]}>
-        <FirePit position={[0, 0, 0]} glow={1.1} />
+        <WorldErrorBoundary fallback={<FirePit position={[0, 0, 0]} glow={1.1} />}>
+          <Suspense fallback={<FirePit position={[0, 0, 0]} glow={1.1} />}>
+            <SketchfabFirePit position={[0, 0, 0]} glow={1.1} scale={0.9} />
+          </Suspense>
+        </WorldErrorBoundary>
         {[
           { p: [-0.9, 0.18, 1.0] as [number, number, number], r: 0.6 },
           { p: [0.8, 0.18, 1.0] as [number, number, number], r: -0.4 },

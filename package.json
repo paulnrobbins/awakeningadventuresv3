@@ -9,13 +9,16 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "compress-models": "for f in public/models/*.glb; do gltf-transform optimize \"$f\" \"$f\" --compress draco --texture-compress webp; done"
+    "compress-models": "for f in public/models/*.glb; do gltf-transform optimize \"$f\" \"$f\" --compress draco --texture-compress webp; done",
+    "fetch:model": "node scripts/fetch-sketchfab-model.mjs",
+    "fetch:images": "node scripts/fetch-images.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.0",
     "@react-three/fiber": "^8.17.10",
     "@react-three/postprocessing": "^2.16.5",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.40.0",
     "gsap": "^3.12.5",
     "howler": "^2.2.4",
     "lenis": "^1.1.18",

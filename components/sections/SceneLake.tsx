@@ -109,7 +109,7 @@ export function SceneLake() {
       <div className="relative z-[var(--z-content)] w-full max-w-[88rem] mx-auto sticky bottom-[12vh] grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         {/* TEXT first in DOM so mobile shows it before the videos. On
             desktop, lg:order-2 pushes it to the right column. */}
-        <div className="home-card home-card-cool lg:col-span-6 lg:order-2">
+        <div className="home-card lg:col-span-6 lg:order-2">
           <p data-lake-anim className="eyebrow text-cream/75 mb-4">On the water</p>
           <h2 data-lake-anim className="font-display text-display text-cream leading-[0.95]">
             Watts Bar Lake.<br />Twenty minutes from the property.

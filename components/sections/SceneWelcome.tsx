@@ -101,7 +101,7 @@ export function SceneWelcome() {
       className="scene flex items-center"
       data-scene="welcome"
     >
-      <div className="home-card home-card-warm relative z-[var(--z-content)] max-w-[68rem] mx-auto">
+      <div className="home-card relative z-[var(--z-content)] max-w-[68rem] mx-auto">
         <div data-welcome-anim>
           <p className="eyebrow text-cream/75 mb-4">Welcome</p>
           <h2 className="font-display text-display text-cream leading-[0.95]">

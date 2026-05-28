@@ -2,9 +2,63 @@
 
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Dock } from './Dock';
 import { LakeWater } from './LakeWater';
+import { modelUrl } from '@/lib/three';
+// NOTE: The procedural ./Dock primitive is no longer rendered here —
+// replaced by the SketchfabDock GLB component below. The file is kept
+// in the codebase as a fallback in case the Sketchfab fetch fails.
+
+/**
+ * Wood-textured pier model from Sketchfab — "Simple Wooden Pier or Dock"
+ * by Jungle Jim (CC-BY 4.0). Replaces the procedural <Dock /> primitive
+ * for visible-distance shots. Credited on /credits per CC-BY 4.0.
+ */
+function SketchfabDock(props: { position: [number, number, number]; rotationY?: number }) {
+  const { scene } = useGLTF(modelUrl('dock.glb'));
+  return (
+    <group position={props.position} rotation={[0, props.rotationY ?? 0, 0]}>
+      <primitive object={scene.clone()} />
+    </group>
+  );
+}
+
+/**
+ * Drifting canoe — Sketchfab CC-BY model by SkyeSladeUT. Loops a slow
+ * left-to-right traverse of the foreground water with a gentle bob and
+ * yaw drift, ~80 seconds per pass. Sells "the lake is alive" without
+ * needing camera changes. The empty horizon pontoon (PontoonBoat in
+ * WorldScene) keeps drifting in parallel.
+ */
+function DriftingCanoe() {
+  const ref = useRef<THREE.Group>(null);
+  const { scene } = useGLTF(modelUrl('canoe.glb'));
+
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const t = clock.getElapsedTime();
+    const period = 80;
+    const phase = (t % period) / period; // 0..1
+    // X traverses -25 to +25 across the foreground water
+    ref.current.position.x = -25 + phase * 50;
+    // Gentle bob + tiny yaw to imply paddling
+    ref.current.position.y = -0.15 + Math.sin(t * 0.85) * 0.04;
+    ref.current.rotation.y = Math.PI / 2 + Math.sin(t * 0.4) * 0.04;
+    ref.current.rotation.z = Math.sin(t * 0.65) * 0.02;
+  });
+
+  return (
+    <group ref={ref} position={[0, -0.15, -22]} scale={1.1}>
+      <primitive object={scene.clone()} />
+    </group>
+  );
+}
+
+// Preload both GLBs so the camera arrival at the lake doesn't stutter
+// while the geometry decodes.
+useGLTF.preload(modelUrl('dock.glb'));
+useGLTF.preload(modelUrl('canoe.glb'));
 
 /**
  * The Lake scene staging — Watts Bar Lake with a wooden dock extending
@@ -36,9 +90,16 @@ export function LakeStage() {
         <meshStandardMaterial color="#C9AC85" roughness={0.95} />
       </mesh>
 
-      {/* Dock — extends 8m from shore into the lake. Origin is at
-          the SHORE end (z=0); the lakeside (mooring) end is at z=-8. */}
-      <Dock position={[0, 0, -4]} rotationY={0} length={8} width={2.2} />
+      {/* Dock — Sketchfab CC-BY model (Jungle Jim) replaces the
+          procedural primitive. Position matches the previous origin
+          at the SHORE end with the lakeside (mooring) end pointing
+          into the water. */}
+      <SketchfabDock position={[0, 0, -4]} rotationY={0} />
+
+      {/* Drifting canoe — Sketchfab CC-BY model (SkyeSladeUT). Slow
+          left-to-right traverse of the foreground water on an 80-sec
+          cycle. */}
+      <DriftingCanoe />
 
       {/* Pontoon moored alongside the dock's lakeside end. Sits parallel
           to the dock with its long axis pointing along -X away from the
@@ -49,72 +110,6 @@ export function LakeStage() {
           gives the visitor a target for "the island campsite". */}
       <Island position={[36, -0.3, -60]} />
       <Island position={[-44, -0.3, -78]} scale={0.6} />
-
-      {/* Gliding birds — 3 silhouettes drifting across the sky at
-          different heights, speeds, and phase offsets so there's
-          almost always one in frame but they never feel synchronized.
-          Sells "activity" / "the lake is alive" without adding
-          competing motion to the foreground. Each pass is ~50sec so
-          the camera reads them as soaring, not flapping past. */}
-      <FlyingBird startX={-55} endX={55} y={9.5} period={52} delay={0} />
-      <FlyingBird startX={55} endX={-55} y={7.2} period={64} delay={18} />
-      <FlyingBird startX={-55} endX={55} y={11.0} period={58} delay={34} />
-    </group>
-  );
-}
-
-/**
- * A bird-shaped silhouette drifting across the sky. Two thin angled
- * planes form a flat V (no flapping wings — at this distance the eye
- * reads the V as bird and motion is provided by the X-traverse + a
- * gentle vertical sin sway).
- *
- * The bird wraps continuously: when it reaches endX it teleports back
- * to startX. The teleport is invisible because the bird is far above
- * the camera and at the edge of the horizon.
- */
-function FlyingBird({
-  startX,
-  endX,
-  y,
-  period,
-  delay = 0,
-}: {
-  startX: number;
-  endX: number;
-  y: number;
-  period: number;
-  delay?: number;
-}) {
-  const ref = useRef<THREE.Group>(null);
-
-  useFrame(({ clock }) => {
-    if (!ref.current) return;
-    const t = clock.getElapsedTime() + delay;
-    const phase = ((t % period) / period); // 0..1
-    const x = startX + phase * (endX - startX);
-    // Gentle soar — slow vertical sin, slight banking roll
-    const yOffset = Math.sin(t * 0.45) * 0.4 + Math.sin(t * 0.13) * 0.6;
-    const bank = Math.sin(t * 0.6) * 0.18;
-    ref.current.position.set(x, y + yOffset, -55);
-    ref.current.rotation.z = bank;
-    // Face direction of travel (flip the wing V depending on which
-    // way we're going across the sky)
-    ref.current.rotation.y = endX > startX ? 0 : Math.PI;
-  });
-
-  return (
-    <group ref={ref}>
-      {/* Left wing */}
-      <mesh position={[-0.22, 0, 0]} rotation={[0, 0, -0.35]}>
-        <planeGeometry args={[0.45, 0.10]} />
-        <meshBasicMaterial color="#1A2018" side={THREE.DoubleSide} />
-      </mesh>
-      {/* Right wing */}
-      <mesh position={[0.22, 0, 0]} rotation={[0, 0, 0.35]}>
-        <planeGeometry args={[0.45, 0.10]} />
-        <meshBasicMaterial color="#1A2018" side={THREE.DoubleSide} />
-      </mesh>
     </group>
   );
 }

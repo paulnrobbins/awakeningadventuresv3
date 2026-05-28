@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "3D model attributions. CC-BY 4.0 legally requires public credit. The /credits page reads this file at build time.",
+  "models": [
+    {
+      "file": "firepit.glb",
+      "title": "Glowing Campfire With Stones, Coal and Logs",
+      "author": "Dennis",
+      "source": "https://skfb.ly/pFwxQ",
+      "license": "CC-BY-4.0",
+      "license_url": "http://creativecommons.org/licenses/by/4.0/",
+      "credit_line": "\"Glowing Campfire With Stones, Coal and Logs\" by Dennis, licensed under CC BY 4.0",
+      "fetched_at": "2026-05-28",
+      "size_bytes": 17970244,
+      "notes": "Compressed from 114 MB raw → 17.9 MB via Draco + WebP textures (npm run compress-models). Still heavier than ideal for hero asset; recompress to ≤5 MB if welcome scene LCP suffers on slow connections."
+    },
+    {
+      "file": "dock.glb",
+      "title": "Simple Wooden Pier or Dock",
+      "author": "Jungle Jim",
+      "source": "https://skfb.ly/punVO",
+      "license": "CC-BY-4.0",
+      "license_url": "http://creativecommons.org/licenses/by/4.0/",
+      "credit_line": "\"Simple Wooden Pier or Dock\" by Jungle Jim, licensed under CC BY 4.0",
+      "fetched_at": "2026-05-28",
+      "size_bytes": 1669300
+    },
+    {
+      "file": "canoe.glb",
+      "title": "Canoe",
+      "author": "SkyeSladeUT",
+      "source": "https://skfb.ly/6WRJo",
+      "license": "CC-BY-4.0",
+      "license_url": "http://creativecommons.org/licenses/by/4.0/",
+      "credit_line": "\"Canoe\" by SkyeSladeUT, licensed under CC BY 4.0",
+      "fetched_at": "2026-05-28",
+      "size_bytes": 1634600
+    }
+  ]
+}
